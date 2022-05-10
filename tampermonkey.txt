@@ -1,0 +1,25 @@
+// ==UserScript==
+// @name         WhatsApp helper 3.5
+// @namespace    http://tampermonkey.net/
+// @version      3.5
+// @description  Добавлена функция пересылки сообщений на unirenter (строка: 511)
+// @author       You
+// @match        https://web.whatsapp.com/
+// @grant        none
+// @require      https://code.jquery.com/jquery-3.4.1.min.js
+// @require      https://cdn.jsdelivr.net/npm/jquery.growl@1.3.5/javascripts/jquery.growl.min.js
+// @require      https://tarasovdev.ru/js/whatsapp-archived.js
+// @run-at       document-end
+// ==/UserScript==
+
+// Режим отладки. 0 - отключен; 1 - включен
+var DEBUG_MODE = 0;
+
+var userID = '65';
+var phoneID = '12';
+var hash = '9bae926779705bce2a7d96ae0cf2f2c8';
+
+// Авторассылка: интервал авторассылки (секунды)
+const autoMessageDelay = 0;
+
+whatsapp_helper();
