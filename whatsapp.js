@@ -30,7 +30,7 @@ const whatsapp_helper = function () {
     // Максимальное время ожидания визуального отчета об отправке сообщения в чате
     const waitUntilMessageSentDelay = 5000; //5000
     // Авторассылка: интервал авторассылки (секунды)
-    const autoMessageDelay = 60;
+    const autoMessageDelay = 30;
 
     // ---*** ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ***---
 
