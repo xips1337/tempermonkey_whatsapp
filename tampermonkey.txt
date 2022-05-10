@@ -22,13 +22,10 @@ var hash = '';
 // Авторассылка: интервал авторассылки (секунды)
 const autoMessageDelay = 15;
 
-//Версия
-const version = 356;
 
 //Дополнительные параметры
 var queryArgs = {
     isDev: 2,
-    version: version,
     ah: hash,
     userID: userID,
     phoneID: phoneID,
