@@ -1128,9 +1128,19 @@ const whatsapp_helper = function () {
     }
 
     //Слушаем нажатие клавиш
-    $(window).keydown((e) => {
-        console.log(e.target);
-    }); 
+    let altPressed = false;
+    $(window).keydown(e => {
+        if(e.code == 'AltLeft' || e.code == 'AltRight'){
+            altPressed = true;
+            console.log('DOWN');
+        }
+    });
+    $(window).keyup(e => {
+        if(e.code == 'AltLeft' || e.code == 'AltRight'){
+            altPressed = false;
+            console.log('UP');
+        }
+    });
     $(window).keypress(function (e) {
         // //use e.which
         // var keyCode = e.which;
