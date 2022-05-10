@@ -1144,7 +1144,7 @@ const whatsapp_helper = function () {
             return;
         }
         let keyCode = e.which;
-        console.log(keyCode);
+        console.log(keyCode); 
     })    
 
     //Delete update message
