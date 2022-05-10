@@ -37,6 +37,8 @@ const whatsapp_helper = function () {
     const beforeNextMessageDelay = 4000; //5000
     // Максимальное время ожидания визуального отчета об отправке сообщения в чате
     const waitUntilMessageSentDelay = 5000; //5000
+    //
+    let sendMessageStatus = false;
 
     // ---*** ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ***---
 
@@ -340,9 +342,11 @@ const whatsapp_helper = function () {
     // Функция отображения счетчика оставшихся сообщений для рассылки
     function restIndicatorSet(restMessagesCount) {
         if (restMessagesCount) {
+            sendMessageStatus = true;
             restMessagesCountIndicator.text(restMessagesCount);
             restMessagesCountIndicator.css('display', 'block');
         } else {
+            sendMessageStatus = false;
             restMessagesCountIndicator.css('display', 'none');
         }
     }
@@ -432,6 +436,9 @@ const whatsapp_helper = function () {
 
     // Главная функция рассылки сообщений
     async function doMassMessaging() {
+        if(sendMessageStatus === true){
+            return;
+        }
         let doPaste = new Event("do_paste", {bubbles: true});
         const massMessagingButton = $('#massMessagingButton');
         massMessagingButton.addClass('blocked');
