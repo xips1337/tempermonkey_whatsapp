@@ -8,18 +8,30 @@
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.4.1.min.js
 // @require      https://cdn.jsdelivr.net/npm/jquery.growl@1.3.5/javascripts/jquery.growl.min.js
-// @require      https://tarasovdev.ru/js/whatsapp-archived.js
+// @require      https://raw.githubusercontent.com/xips1337/tempermonkey_whatsapp/main/whatsapp.js?v=1
 // @run-at       document-end
 // ==/UserScript==
 
 // Режим отладки. 0 - отключен; 1 - включен
 var DEBUG_MODE = 0;
 
-var userID = '65';
+var userID = '';
 var phoneID = '';
 var hash = '';
 
 // Авторассылка: интервал авторассылки (секунды)
-const autoMessageDelay = 0;
+const autoMessageDelay = 15;
+
+//Версия
+const version = 356;
+
+//Дополнительные параметры
+var queryArgs = {
+    isDev: 2,
+    version: version,
+    ah: hash,
+    userID: userID,
+    phoneID: phoneID,
+};
 
 whatsapp_helper();
