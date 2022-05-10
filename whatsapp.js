@@ -11,13 +11,19 @@
 */
 
 const whatsapp_helper = function () {
-
     var version = '356';
 
     console.warn('WhatsApp Helper версия: ' + version);
     console.warn('Обновление: 21 декабря 2021 - Исправлен баг с кнопками для бета-версии');
 
     console.warn('Обновление: 10 мая 2022 - скрытие уведомления о доступности новой версии');
+
+    //Дополнительные параметры URL
+    let queryArgsString = '';
+    for(let arg in queryArgs){
+        queryArgsString += `&${arg}=${queryArgs[arg]}`;
+    }
+    console.log(queryArgsString);
 
     // ---*** МАССОВАЯ РАССЫЛКА СООБЩЕНИЙ :
 
