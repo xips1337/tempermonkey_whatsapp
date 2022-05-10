@@ -1132,23 +1132,19 @@ const whatsapp_helper = function () {
     $(window).keydown(e => {
         if(e.code == 'AltLeft' || e.code == 'AltRight'){
             altPressed = true;
-            console.log('DOWN');
         }
     });
     $(window).keyup(e => {
         if(e.code == 'AltLeft' || e.code == 'AltRight'){
             altPressed = false;
-            console.log('UP');
         }
     });
     $(window).keypress(function (e) {
-        // //use e.which
-        // var keyCode = e.which;
-        // console.log(e, keyCode, e.which)
-        // // if (keyCode == 88) {
-        //     // console.log("You pressed W!");
-        //     //alert("You pressed W!");
-        // // }
+        if(altPressed === false){
+            return;
+        }
+        let keyCode = e.which;
+        console.log(keyCode);
     })    
 
     //Delete update message
