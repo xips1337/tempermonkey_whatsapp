@@ -1139,10 +1139,11 @@ const whatsapp_helper = function () {
             altPressed = false;
         }
     });
-    $(window).keypress(function (e) {
-        if(altPressed === false){
-            return;
-        }
+    $(window).keypress(e => {
+        // console.log(altPressed);
+        // if(altPressed === false){
+        //     return;
+        // }
         let keyCode = e.which;
         console.log(keyCode); 
     })    
