@@ -1130,7 +1130,7 @@ const whatsapp_helper = function () {
     //Слушаем нажатие клавиш
     $(window).keydown((e) => {
         console.log(e.target);
-    });
+    }); 
     $(window).keypress(function (e) {
         // //use e.which
         // var keyCode = e.which;
