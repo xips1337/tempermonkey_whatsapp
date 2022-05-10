@@ -1149,4 +1149,4 @@ const whatsapp_helper = function () {
 
     //Delete update message
     //watchDomMutation('span._3z9_h', document.body, (node) => {node.remove()})
-}
+} 
