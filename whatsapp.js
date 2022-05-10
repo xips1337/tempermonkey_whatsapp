@@ -1007,8 +1007,10 @@ const whatsapp_helper = function () {
     var closeAllBtn = null;
     growls = {};
 
+    var xhttp;
     function getAlerts(url, callback) {
-        var xhttp = new XMLHttpRequest();
+        xhttp.abort();
+        xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
                 try {
@@ -1124,6 +1126,17 @@ const whatsapp_helper = function () {
             window.growls[alertsType][alertId].remove();
         }
     }
+
+    //Слушаем нажатие клавиш
+    $(window).keypress(function (e) {
+        //use e.which
+        var keyCode = e.which;
+        console.log(e, keyCode, e.which)
+        // if (keyCode == 88) {
+            // console.log("You pressed W!");
+            //alert("You pressed W!");
+        // }
+    })    
 
     //Delete update message
     //watchDomMutation('span._3z9_h', document.body, (node) => {node.remove()})
