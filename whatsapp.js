@@ -11,19 +11,11 @@
 */
 
 const whatsapp_helper = function () {
-    var version = '356';
+
+    var version = '355';
 
     console.warn('WhatsApp Helper версия: ' + version);
     console.warn('Обновление: 21 декабря 2021 - Исправлен баг с кнопками для бета-версии');
-
-    console.warn('Обновление: 10 мая 2022 - скрытие уведомления о доступности новой версии');
-
-    //Дополнительные параметры URL
-    let queryArgsString = '';
-    for(let arg in queryArgs){
-        queryArgsString += `&${arg}=${queryArgs[arg]}`;
-    }
-    console.log(queryArgsString);
 
     // ---*** МАССОВАЯ РАССЫЛКА СООБЩЕНИЙ :
 
@@ -37,6 +29,8 @@ const whatsapp_helper = function () {
     const beforeNextMessageDelay = 4000; //5000
     // Максимальное время ожидания визуального отчета об отправке сообщения в чате
     const waitUntilMessageSentDelay = 5000; //5000
+    // Авторассылка: интервал авторассылки (секунды)
+    const autoMessageDelay = 60;
 
     // ---*** ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ***---
 
@@ -519,7 +513,6 @@ const whatsapp_helper = function () {
                 fetch(massMessagingConfirmUrl + key + '&status=6');
                 console.error('ОШИБКА: ' + error);
             } finally {
-                // Отправляем ещё, если задержка не равна 0
                 // Задержка перед переходом к следующему сообщению
                 await delay(beforeNextMessageDelay);
                 restIndicatorSet(--restMessagesCount);
@@ -532,14 +525,7 @@ const whatsapp_helper = function () {
 
     //Авторассылка сообщений
     $(document).ready(() => {
-        //Удаляем окошко "Обновить"
-        //Делаем интервал и проверяем, существует ли окошко с обновлением
-        setInterval(() => {
-            $('._3z9_h').remove();
-        }, 1000);
-
-        if (autoMessageDelay != 0)
-            setInterval(doMassMessaging, autoMessageDelay * 1000);
+        setInterval(doMassMessaging, autoMessageDelay * 1000);
     })
 
 
@@ -782,7 +768,7 @@ const whatsapp_helper = function () {
 
         var messageSelectionIndicators = messagesRegion.querySelectorAll('div[tabindex] > span > div');
 
-        messageSelectionIndicators.forEach(async function (indicator) {
+        messageSelectionIndicators.forEach(function (indicator) {
 
             if (getComputedStyle(indicator.lastChild.lastChild.lastChild).opacity === '1') {
                 // Альтернативное условие: getComputedStyle(indicator).backgroundColor !== 'rgba(0, 0, 0, 0)'
@@ -804,38 +790,16 @@ const whatsapp_helper = function () {
                     });
                 }
 
-                //UPD 10.05.2022
-                //Если изображений меньше 4, то просто получаем и отправляем.
-                //Если больше (есть кнопка "Ещё"), то открываем их, пролистываем и тогда отправляем
+
                 var lasImgParent = null;
-                if(messageContainer.querySelector('.VWPRY') === null){
-                    messageContainer.querySelectorAll('img').forEach(function (img) {
-                        if (!img.classList.contains('emoji') && img.src.indexOf('blob') == 0) {
-                            if (!lasImgParent || (lasImgParent !== img.parentNode.parentNode)) {
-                                lasImgParent = img.parentNode.parentNode;
-                                images.push(makeBase64Image(img));
-                            }
+                messageContainer.querySelectorAll('img').forEach(function (img) {
+                    if (!img.classList.contains('emoji') && img.src.indexOf('blob') == 0) {
+                        if (!lasImgParent || (lasImgParent !== img.parentNode.parentNode)) {
+                            lasImgParent = img.parentNode.parentNode;
+                            images.push(makeBase64Image(img));
                         }
-                    });
-                }else{
-                    let imageElements = messageContainer.querySelectorAll('img');
-                    let lastElement = imageElements[imageElements.length-1];
-                    lastElement.click();
-
-                    await delay(1000);
-
-                    let imageSlidesBlock = document.querySelector('._1XWMx');
-                    let imageSlides = imageSlidesBlock.querySelectorAll('.zm1kZ');
-
-                    for(let slideContent of imageSlides){
-                        slideContent.querySelectorAll('.zm1kZ._1uBVh._8KUDv .GfgP-')[1].click();
-                        await delay(1000);
-
-                        let imageBlock = document.querySelector('._2E0wf');
-                        images.push(makeBase64Image(imageBlock.querySelector('img')));
                     }
-                }
-                document.querySelector('._2OBzR [data-testid="x-viewer"]').click();
+                });
 
                 selectedMessages.push({
                     'time': time,
@@ -1119,4 +1083,5 @@ const whatsapp_helper = function () {
 
     //Delete update message
     //watchDomMutation('span._3z9_h', document.body, (node) => {node.remove()})
+
 }
