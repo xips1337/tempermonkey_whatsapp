@@ -16,8 +16,8 @@
 var DEBUG_MODE = 0;
 
 var userID = '65';
-var phoneID = '12';
-var hash = '9bae926779705bce2a7d96ae0cf2f2c8';
+var phoneID = '';
+var hash = '';
 
 // Авторассылка: интервал авторассылки (секунды)
 const autoMessageDelay = 0;
