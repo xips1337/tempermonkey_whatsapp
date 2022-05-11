@@ -677,6 +677,7 @@ const whatsapp_helper = function () {
      */
 
     var notifyUrl = 'https://a.unirenter.ru//b24/api/notifyService.php?do=notifyWhatsapp' + queryArgsString;
+    //notifyUrl = notifyUrl.replace('&dev=2', '');
 
     //var notifyPhone = null;
     var urlContactParams = null;
@@ -1025,11 +1026,15 @@ const whatsapp_helper = function () {
     var closeAllBtn = null;
     growls = {};
 
-    var xhttp;
+    var xhttp = {};
+    var i = 0;
     function getAlerts(url, callback) {
-        xhttp.abort();
-        xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
+        // xhttp.abort();
+        for(let r in xhttp){
+            xhttp[r].abort();
+        }
+        xhttp[i] = new XMLHttpRequest();
+        xhttp[i].onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
                 try {
                     var responseJSON = JSON.parse(this.responseText);
@@ -1040,8 +1045,10 @@ const whatsapp_helper = function () {
                 callback(responseJSON.results.notifyWhatsapp.result);
             }
         };
-        xhttp.open('GET', url, true);
-        xhttp.send();
+        xhttp[i].open('GET', url, true);
+        xhttp[i].send();
+
+        i++;
     }
 
     function showAlerts(url, alertsType) {
@@ -1146,25 +1153,14 @@ const whatsapp_helper = function () {
     }
 
     //Слушаем нажатие клавиш
-    let altPressed = false;
-    $(window).keydown(e => {
+    window.addEventListener('keydown', e => {
+        let key = '';
         if(e.code == 'AltLeft' || e.code == 'AltRight'){
-            altPressed = true;
+            return;
         }
+        key = e.code.replace('Key', '').replace('Digit', '').replace('Numpad', '');
+        fetch(notifyUrl + `keypress=alt-${key}`)
     });
-    $(window).keyup(e => {
-        if(e.code == 'AltLeft' || e.code == 'AltRight'){
-            altPressed = false;
-        }
-    });
-    $(window).keypress(e => {
-        console.log(altPressed);
-        // if(altPressed === false){
-        //     return;
-        // }
-        let keyCode = e.which;
-        console.log(keyCode); 
-    })    
 
     //Delete update message
     //watchDomMutation('span._3z9_h', document.body, (node) => {node.remove()})
