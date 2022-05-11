@@ -12,7 +12,7 @@
 
 const whatsapp_helper = function () {
     //Версия
-    const version = 357;
+    const version = 358;
 
     console.warn('WhatsApp Helper версия: ' + version);
     console.warn('Обновление: 21 декабря 2021 - Исправлен баг с кнопками для бета-версии');
@@ -24,6 +24,7 @@ const whatsapp_helper = function () {
     console.warn('Обновление: 11 мая 2022 - Сброс XHR при смене диалога');
     console.warn('Обновление: 11 мая 2022 - Закрытия окошка "Неправильный номер" в конце рассылки');
     console.warn('Обновление: 11 мая 2022 - После рассылки открывается номер 7 925 605-02-75');
+    console.warn('Обновление: 11 мая 2022 - Обновление окошек при ALT+ANYKEY');
 
     //Дополнительные параметры URL
     queryArgs['version'] = version;
@@ -1032,9 +1033,17 @@ const whatsapp_helper = function () {
     var closeAllBtn = null;
     growls = {};
 
+    //Сделан сброс xhr при повторном вызове
+    //Дополнительный аргумент postData - в случае комбинации alt+anykey
     var xhttp = {};
     var i = 0;
-    function getAlerts(url, callback) {
+    function getAlerts(url, callback, postData = {}) {
+        if(!postData.type){
+            postData.type = 'GET';
+        }
+        if(!postData.body){
+            postData.body = '';
+        }
         // xhttp.abort();
         for(let r in xhttp){
             xhttp[r].abort();
@@ -1051,19 +1060,20 @@ const whatsapp_helper = function () {
                 callback(responseJSON.results.notifyWhatsapp.result);
             }
         };
-        xhttp[i].open('GET', url, true);
-        xhttp[i].send();
+        xhttp[i].open(postData.type, url, true);
+        xhttp[i].send(postData.body);
 
         i++;
     }
 
-    function showAlerts(url, alertsType) {
+    function showAlerts(url, alertsType, postData = {}) {
         alertsTicking[alertsType] = true;
         getAlerts(url,
             function (alerts) {
                 appendAlerts(alerts, alertsType);
                 alertsTicking[alertsType] = false;
-            }
+            },
+            postData
         );
     }
 
@@ -1073,11 +1083,11 @@ const whatsapp_helper = function () {
 
     var alertsTicking = [];
 
-    function reloadAlerts(url, alertsType) {
+    function reloadAlerts(url, alertsType, postData = {}) {
         if (!alertsTicking[alertsType]) {
             isShowAlerts(alertsType) && removeAlerts(alertsType);
             window.growls[alertsType] = {};
-            showAlerts(url, alertsType);
+            showAlerts(url, alertsType, postData);
         }
     }
 
@@ -1164,8 +1174,32 @@ const whatsapp_helper = function () {
         if(e.code == 'AltLeft' || e.code == 'AltRight'){
             return;
         }
+
+        let notifyPhoneOrContactText = document.querySelector('header span[dir=auto]').innerText;
+        let urlContactParamsNew;
+        urlContactParamsNew = isValidPhone(notifyPhoneOrContactText)
+            ? ('&phone=' + notifyPhoneOrContactText.replace(/[\D]/gi, ''))
+            : ('&contact=' + notifyPhoneOrContactText);
+
         key = e.code.replace('Key', '').replace('Digit', '').replace('Numpad', '');
-        fetch(notifyUrl + `keypress=alt-${key}`)
+
+        navigator.clipboard.readText()
+        .then(text => {
+            reloadAlerts(
+                notifyUrl + urlContactParamsNew + '&keypress=alt+' + key, 
+                'notify', 
+                {
+                    type: 'POST', 
+                    body: JSON.stringify({
+                        buffer: text
+                    })
+                });
+        })
+        .catch(err => {
+            // возможно, пользователь не дал разрешение на чтение данных из буфера обмена
+            console.log('Something went wrong', err);
+        });
+
     });
 
     //Delete update message
