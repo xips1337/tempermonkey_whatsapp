@@ -444,98 +444,116 @@ const whatsapp_helper = function () {
         const massMessagingButton = $('#massMessagingButton');
         massMessagingButton.addClass('blocked');
         DEBUG_MODE && console.log("AUTOSEND: button blocked");
-        let response = await fetch(massMessagingUrl);
-        DEBUG_MODE && console.log("AUTOSEND: API response received");
-        let data = await response.json();
-        DEBUG_MODE && console.log("AUTOSEND: JSON acquired");
 
-        if (!data.msg || Object.keys(data.msg).length === 0) {
-            if (!data.msg) console.error('ОШИБКА: неверный формат ответа сервера');
-            else console.warn('Сообщений для рассылки нет');
-            massMessagingButton.removeClass('blocked');
-            return;
-        } else {
-            var restMessagesCount = Object.keys(data.msg).length;
-            restIndicatorSet(restMessagesCount);
-            DEBUG_MODE && console.log(`AUTOSEND: ${restMessagesCount} messages ready`);
-        }
-        let errorsCount = 0,
-            sentCount = 0;
-        for (let key in data.msg) {
-            let phoneNumber = formatPhoneNumber(data.msg[key].phone),
-                messageText = formatTextMessage(data.msg[key].msgText);
-            try {
-                // Открытие окна чата
-                let messageBox = await openChatByPhone(phoneNumber, messageText);
-                DEBUG_MODE && console.warn('Message box ready')
-                DEBUG_MODE && console.log(messageBox)
-                /* Эмуляция наличия изображений для тестов
-                var imgs = [
-                    'https://image.freepik.com/free-vector/the-scheme-of-data-transmission-isometric-secure-connection-cloud-computing-server-room-datacent_39422-875.jpg',
-                    'https://image.freepik.com/free-photo/product-presentation-podium-minimal-design-with-a-light-pink-color-background-3d-rendering_41470-4006.jpg'
-                ];
-                if('79259336744' === key){
-                    data.msg[key].img = imgs;
-                }*/
-                let buttonSend;
-                if (data.msg[key].hasOwnProperty('img')) {
+        //Добавляем try catch, чтобы ловить ошибку cors
+        try{
+            let response = await fetch(massMessagingUrl);
+            DEBUG_MODE && console.log("AUTOSEND: API response received");
+            let data = await response.json();
+            DEBUG_MODE && console.log("AUTOSEND: JSON acquired");
 
-                    let count = data.msg[key]['img'].length;
-                    let index = 0;
-                    let input;
-                    for (const url of data.msg[key]['img']) {
-
-                        // Вставка изображний
-                        let pngBlob = await getImgBlobPng(url);
-
-                        await navigator.clipboard.write([
-                            new ClipboardItem({
-                                [pngBlob.type]: pngBlob
-                            })
-                        ]);
-
-                        input = input || await waitForElement(textareaSelector + ' div.copyable-text.selectable-text[data-tab="6"]');
-
-                        setTimeout(function () {
-                            document.dispatchEvent(doPaste);
-                        }, 200);
-
-                        await waitForPaste(++index, count);
-                    }
-                    buttonSend = await waitForElement('span[data-icon="send"]'); // '._19dz5 span[data-icon="send"]'
-                } else {
-                    buttonSend = messageBox.querySelector('span[data-icon="send"]');
-                }
-                await delay(beforeSendMessageDelay);
-                // Отправка сообщения
-                eventFire(buttonSend, 'click');
-                DEBUG_MODE && console.log("AUTOSEND: send button clicked");
-                // Отправка отчета о рассылке на Unirenter
-                fetch(massMessagingConfirmUrl + key + '&status=3');
-                DEBUG_MODE && console.log("AUTOSEND: report sent to Unirenter");
-                // Включение механизма ожидания визуального отчета об отправке сообщения в чате
-                let sendingStatus = '';
+            if (!data.msg || Object.keys(data.msg).length === 0) {
+                if (!data.msg) console.error('ОШИБКА: неверный формат ответа сервера');
+                else console.warn('Сообщений для рассылки нет');
+                massMessagingButton.removeClass('blocked');
+                return;
+            } else {
+                var restMessagesCount = Object.keys(data.msg).length;
+                restIndicatorSet(restMessagesCount);
+                DEBUG_MODE && console.log(`AUTOSEND: ${restMessagesCount} messages ready`);
+            }
+            let errorsCount = 0,
+                sentCount = 0;
+            for (let key in data.msg) {
+                let phoneNumber = formatPhoneNumber(data.msg[key].phone),
+                    messageText = formatTextMessage(data.msg[key].msgText);
                 try {
-                    sendingStatus = await waitUntilMessageSent();
-                } catch (e) {
-                    sendingStatus = e;
+                    // Открытие окна чата
+                    let messageBox = await openChatByPhone(phoneNumber, messageText);
+                    DEBUG_MODE && console.warn('Message box ready')
+                    DEBUG_MODE && console.log(messageBox)
+                    /* Эмуляция наличия изображений для тестов
+                    var imgs = [
+                        'https://image.freepik.com/free-vector/the-scheme-of-data-transmission-isometric-secure-connection-cloud-computing-server-room-datacent_39422-875.jpg',
+                        'https://image.freepik.com/free-photo/product-presentation-podium-minimal-design-with-a-light-pink-color-background-3d-rendering_41470-4006.jpg'
+                    ];
+                    if('79259336744' === key){
+                        data.msg[key].img = imgs;
+                    }*/
+                    let buttonSend;
+                    if (data.msg[key].hasOwnProperty('img')) {
+
+                        let count = data.msg[key]['img'].length;
+                        let index = 0;
+                        let input;
+                        for (const url of data.msg[key]['img']) {
+
+                            // Вставка изображний
+                            let pngBlob = await getImgBlobPng(url);
+
+                            await navigator.clipboard.write([
+                                new ClipboardItem({
+                                    [pngBlob.type]: pngBlob
+                                })
+                            ]);
+
+                            input = input || await waitForElement(textareaSelector + ' div.copyable-text.selectable-text[data-tab="6"]');
+
+                            setTimeout(function () {
+                                document.dispatchEvent(doPaste);
+                            }, 200);
+
+                            await waitForPaste(++index, count);
+                        }
+                        buttonSend = await waitForElement('span[data-icon="send"]'); // '._19dz5 span[data-icon="send"]'
+                    } else {
+                        buttonSend = messageBox.querySelector('span[data-icon="send"]');
+                    }
+                    await delay(beforeSendMessageDelay);
+                    // Отправка сообщения
+                    eventFire(buttonSend, 'click');
+                    DEBUG_MODE && console.log("AUTOSEND: send button clicked");
+                    // Отправка отчета о рассылке на Unirenter
+                    fetch(massMessagingConfirmUrl + key + '&status=3');
+                    DEBUG_MODE && console.log("AUTOSEND: report sent to Unirenter");
+                    // Включение механизма ожидания визуального отчета об отправке сообщения в чате
+                    let sendingStatus = '';
+                    try {
+                        sendingStatus = await waitUntilMessageSent();
+                    } catch (e) {
+                        sendingStatus = e;
+                    }
+                    sentCount++;
+                    console.info('ОТПРАВЛЕНО: ' + phoneNumber + ' - "' + messageText.slice(0, 50) + '" (' + sendingStatus + ')');
+                } catch (error) {
+                    errorsCount++;
+                    fetch(massMessagingConfirmUrl + key + '&status=6');
+                    console.error('ОШИБКА: ' + error);
+                } finally {
+                    // Отправляем ещё, если задержка не равна 0
+                    // Задержка перед переходом к следующему сообщению
+                    await delay(beforeNextMessageDelay);
+                    restIndicatorSet(--restMessagesCount);
+                    DEBUG_MODE && console.log(`AUTOSEND: ${restMessagesCount} messages left to send`);
                 }
-                sentCount++;
-                console.info('ОТПРАВЛЕНО: ' + phoneNumber + ' - "' + messageText.slice(0, 50) + '" (' + sendingStatus + ')');
-            } catch (error) {
-                errorsCount++;
-                fetch(massMessagingConfirmUrl + key + '&status=6');
-                console.error('ОШИБКА: ' + error);
-            } finally {
-                // Отправляем ещё, если задержка не равна 0
-                // Задержка перед переходом к следующему сообщению
-                await delay(beforeNextMessageDelay);
-                restIndicatorSet(--restMessagesCount);
-                DEBUG_MODE && console.log(`AUTOSEND: ${restMessagesCount} messages left to send`);
+            }
+            //Удаляем окно "неверный номер", если оно существует
+            if($('._20C5O._2Zdgs').length){
+                $('._20C5O._2Zdgs').click();
+            }
+            massMessagingButton.removeClass('blocked');
+            console.warn('ГОТОВО. Ошибок: ' + errorsCount + ' Отправлено: ' + sentCount);
+
+            openChatByPhone('7 925 605-02-75');
+        }catch(e){
+            console.error('Произошла ошибка при получении списка авторассылки');
+            if(autoMessageDelay === 0){
+                alert('Произошла ошибка при получении списка авторассылки');
+            }else{
+                await delay(2000);
+                window.location.href = window.location.href + '/?v=' + new Date().getTime();
             }
         }
-        massMessagingButton.removeClass('blocked');
-        console.warn('ГОТОВО. Ошибок: ' + errorsCount + ' Отправлено: ' + sentCount);
     }
 
     //Авторассылка сообщений
@@ -1140,7 +1158,7 @@ const whatsapp_helper = function () {
         }
     });
     $(window).keypress(e => {
-        // console.log(altPressed);
+        console.log(altPressed);
         // if(altPressed === false){
         //     return;
         // }

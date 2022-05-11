@@ -22,13 +22,12 @@ var hash = '';
 // Авторассылка: интервал авторассылки (секунды)
 const autoMessageDelay = 15;
 
-
 //Дополнительные параметры
 var queryArgs = {
-    isDev: 2,
     ah: hash,
     userID: userID,
     phoneID: phoneID,
+    dev: 2,
 };
 
 whatsapp_helper();
