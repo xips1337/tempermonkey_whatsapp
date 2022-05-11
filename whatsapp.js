@@ -12,7 +12,7 @@
 
 const whatsapp_helper = function () {
     //Версия
-    const version = 358;
+    const version = 359;
 
     console.warn('WhatsApp Helper версия: ' + version);
     console.warn('Обновление: 21 декабря 2021 - Исправлен баг с кнопками для бета-версии');
@@ -25,6 +25,7 @@ const whatsapp_helper = function () {
     console.warn('Обновление: 11 мая 2022 - Закрытия окошка "Неправильный номер" в конце рассылки');
     console.warn('Обновление: 11 мая 2022 - После рассылки открывается номер 7 925 605-02-75');
     console.warn('Обновление: 11 мая 2022 - Обновление окошек при ALT+ANYKEY');
+    console.warn('Обновление: 11 мая 2022 - Окошко при CORS ошибке');
 
     //Дополнительные параметры URL
     queryArgs['version'] = version;
@@ -45,8 +46,10 @@ const whatsapp_helper = function () {
     const beforeNextMessageDelay = 4000; //5000
     // Максимальное время ожидания визуального отчета об отправке сообщения в чате
     const waitUntilMessageSentDelay = 5000; //5000
-    //
+    //Cтатус интервала
     let sendMessageStatus = false;
+    //ид интервала для кнопки стоп
+    let sendMessageInterval = null;
 
     // ---*** ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ***---
 
@@ -553,13 +556,8 @@ const whatsapp_helper = function () {
 
             openChatByPhone('7 925 605-02-75');
         }catch(e){
-            console.error('Произошла ошибка при получении списка авторассылки');
-            if(autoMessageDelay === 0){
-                alert('Произошла ошибка при получении списка авторассылки');
-            }else{
-                await delay(2000);
-                window.location.href = window.location.href + '/?v=' + new Date().getTime();
-            }
+            showCorsError();
+            return;
         }
     }
 
@@ -572,7 +570,7 @@ const whatsapp_helper = function () {
         }, 1000);
 
         if (autoMessageDelay != 0)
-            setInterval(doMassMessaging, autoMessageDelay * 1000);
+            sendMessageInterval = setInterval(doMassMessaging, autoMessageDelay * 1000);
     })
 
 
@@ -1050,18 +1048,20 @@ const whatsapp_helper = function () {
         }
         xhttp[i] = new XMLHttpRequest();
         xhttp[i].onreadystatechange = function () {
-            if (this.readyState === 4 && this.status === 200) {
-                try {
-                    var responseJSON = JSON.parse(this.responseText);
-                } catch (error) {
-                    console.log(error);
-                    return;
+            try {
+                if (this.readyState === 4 && this.status === 200) {
+                        var responseJSON = JSON.parse(this.responseText);
+                    callback(responseJSON.results.notifyWhatsapp.result);
                 }
-                callback(responseJSON.results.notifyWhatsapp.result);
+            } catch (error) {
+                console.log(error);
+                return;
             }
         };
         xhttp[i].open(postData.type, url, true);
         xhttp[i].send(postData.body);
+        showCorsError();
+        return;
 
         i++;
     }
@@ -1199,8 +1199,25 @@ const whatsapp_helper = function () {
             // возможно, пользователь не дал разрешение на чтение данных из буфера обмена
             console.log('Something went wrong', err);
         });
-
     });
+    
+    //Окошко ошибки CORS
+    function showCorsError(){
+        // removeAlerts('notify');
+        clearInterval(sendMessageInterval);
+        appendAlerts(
+            {
+                corsError: {
+                    title: 'ПРОБЛЕМА ОКОШКИ',
+                    msg: `Нажмите CTRL + SHIFT + R и включите расширения. <br>
+                            <a href="https://a.unirenter.ru/b24/r.php?l=std&q=511" target="_blank">Подробней</a>`,
+                    bColor: '#e6005c',
+                    tColor: '#ffffff'
+                }
+            }, 
+            'notify'
+        );
+    }
 
     //Delete update message
     //watchDomMutation('span._3z9_h', document.body, (node) => {node.remove()})
