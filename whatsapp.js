@@ -12,7 +12,7 @@
 
 const whatsapp_helper = function () {
     //Версия
-    const version = 359;
+    const version = 365;
 
     console.warn('WhatsApp Helper версия: ' + version);
     console.warn('Обновление: 21 декабря 2021 - Исправлен баг с кнопками для бета-версии');
@@ -26,11 +26,14 @@ const whatsapp_helper = function () {
     console.warn('Обновление: 11 мая 2022 - После рассылки открывается номер 7 925 605-02-75');
     console.warn('Обновление: 11 мая 2022 - Обновление окошек при ALT+ANYKEY');
     console.warn('Обновление: 11 мая 2022 - Окошко при CORS ошибке');
+    console.warn('Обновление: 11 мая 2022 - Чтение сообщений');
+    console.warn('Обновление: 12 мая 2022 - Отлов исходящих сообщений и отправка на сервер');
+    console.warn('Обновление: 12 мая 2022 - Функция добавления CSS файлов');
 
     //Дополнительные параметры URL
     queryArgs['version'] = version;
     let queryArgsString = '';
-    for(let arg in queryArgs){
+    for (let arg in queryArgs) {
         queryArgsString += `&${arg}=${queryArgs[arg]}`;
     }
 
@@ -68,6 +71,12 @@ const whatsapp_helper = function () {
         css.appendChild(document.createTextNode(cssRules));
         document.head.appendChild(css);
     }
+
+    //Добавление CSS файлов
+    function appendStyleFile(url){
+        $('head').append(`<link href="${url}" rel="stylesheet" />`)
+    }
+    
 
     // function for triggering mouse events
     function eventFire(elem, type, centerX, centerY) {
@@ -192,12 +201,12 @@ const whatsapp_helper = function () {
             setTimeout(() => {
                 let textarea = document.querySelector(textareaSelector);
                 console.error(textarea)
-                if(textarea.textContent.includes(phoneNumber)) {
-                        observer.disconnect();
-                        textarea = textarea.querySelector('.copyable-text[role="textbox"]');
-                        textarea.innerHTML = messageText || '';
-                        eventFire(textarea, 'input');
-                        resolve(textarea.closest('div.copyable-area'));
+                if (textarea.textContent.includes(phoneNumber)) {
+                    observer.disconnect();
+                    textarea = textarea.querySelector('.copyable-text[role="textbox"]');
+                    textarea.innerHTML = messageText || '';
+                    eventFire(textarea, 'input');
+                    resolve(textarea.closest('div.copyable-area'));
                 }
             }, beforeNextMessageDelay)
             observer.observe(document.querySelector('#app'), {
@@ -230,7 +239,7 @@ const whatsapp_helper = function () {
             clearInterval(waitForSidebarInterval);
 
             // Проверка актуальности классов
-            if(!$('#side').hasClass('_1KDb8')){
+            if (!$('#side').hasClass('_1KDb8')) {
                 /**
                  * Селекторы которые необходимо заменить и подсказки где их искать в DOM, можно найти в коде по запрсу "Селектор"
                  * На данный момент их 4 штуки.
@@ -364,22 +373,22 @@ const whatsapp_helper = function () {
 
     function getImgBlobPng(url) {
         return new Promise(function (resolve) {
-                fetch(url)
-                    .then(response => response.blob())
-                    .then(blob => {
-                        var imageUrl = window.URL.createObjectURL(blob);
-                        var canvas = document.createElement("canvas");
-                        var ctx = canvas.getContext("2d");
-                        var imageEl = document.createElement("img");
-                        imageEl.src = imageUrl;
-                        imageEl.onload = (e) => {
-                            canvas.width = e.target.width;
-                            canvas.height = e.target.height;
-                            ctx.drawImage(e.target, 0, 0, e.target.width, e.target.height);
-                            canvas.toBlob(pngBlob => resolve(pngBlob), "image/png", 1);
-                        };
-                    });
-            }
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    var imageUrl = window.URL.createObjectURL(blob);
+                    var canvas = document.createElement("canvas");
+                    var ctx = canvas.getContext("2d");
+                    var imageEl = document.createElement("img");
+                    imageEl.src = imageUrl;
+                    imageEl.onload = (e) => {
+                        canvas.width = e.target.width;
+                        canvas.height = e.target.height;
+                        ctx.drawImage(e.target, 0, 0, e.target.width, e.target.height);
+                        canvas.toBlob(pngBlob => resolve(pngBlob), "image/png", 1);
+                    };
+                });
+        }
         );
 
     }
@@ -447,16 +456,16 @@ const whatsapp_helper = function () {
 
     // Главная функция рассылки сообщений
     async function doMassMessaging() {
-        if(sendMessageStatus === true){
+        if (sendMessageStatus === true) {
             return;
         }
-        let doPaste = new Event("do_paste", {bubbles: true});
+        let doPaste = new Event("do_paste", { bubbles: true });
         const massMessagingButton = $('#massMessagingButton');
         massMessagingButton.addClass('blocked');
         DEBUG_MODE && console.log("AUTOSEND: button blocked");
 
         //Добавляем try catch, чтобы ловить ошибку cors
-        try{
+        try {
             let response = await fetch(massMessagingUrl);
             DEBUG_MODE && console.log("AUTOSEND: API response received");
             let data = await response.json();
@@ -548,14 +557,14 @@ const whatsapp_helper = function () {
                 }
             }
             //Удаляем окно "неверный номер", если оно существует
-            if($('._20C5O._2Zdgs').length){
+            if ($('._20C5O._2Zdgs').length) {
                 $('._20C5O._2Zdgs').click();
             }
             massMessagingButton.removeClass('blocked');
             console.warn('ГОТОВО. Ошибок: ' + errorsCount + ' Отправлено: ' + sentCount);
 
             openChatByPhone('7 925 605-02-75');
-        }catch(e){
+        } catch (e) {
             showCorsError();
             return;
         }
@@ -571,6 +580,9 @@ const whatsapp_helper = function () {
 
         if (autoMessageDelay != 0)
             sendMessageInterval = setInterval(doMassMessaging, autoMessageDelay * 1000);
+
+        //Добавляем стили
+        appendStyleFile('https://raw.githubusercontent.com/urtvs/tempermonkey/main/whatsapp/whatsapp_style.css');
     })
 
 
@@ -586,7 +598,9 @@ const whatsapp_helper = function () {
     var interval2 = setInterval(function () {
         if (void 0 != document.querySelector('#side') && void 0 == document.querySelector('#addUnirenter')) {
 
+            //Меняем значок поиска на копирование
             var parent2 = document.querySelectorAll('#main header > div');
+            var number2 = document.querySelector('._21nHd span').textContent.replace(/[\D]/gi, '');
             if (parent2 && parent2[2]) {
                 var title2 = parent2[1].querySelector('span[dir="auto"]');
                 parent2 = parent2[2].querySelector('div');
@@ -594,28 +608,28 @@ const whatsapp_helper = function () {
                 button2.id = 'addUnirenter';
                 button2.style = 'height:24px; padding:8px; cursor:pointer;';
                 button2.onclick = function () {
-                    //var number2 = title2.innerText.replace(/[\D]/gi, '');
-                    //if(number2 != '') window.open('https://a.unirenter.ru/b24/r.php?ph='+number2);
-                    setTimeout(function () {
-                        if (openTel != '') {
-                            var number2 = openTel.replace(/[\D]/gi, '');
-
-                            console.log('test2');
-
-                            if (number2 != '') window.open('https://a.unirenter.ru/b24/r.php?ph=' + number2 + '&contactType=phone&advert=whats');
-                            openTel = '';
-                            if (el_ != null) {
-                                el_.click();
-                                el_ = null;
-                            }
-                        }
-                    }, 1000);
-                    title2.click();
+                    if(!number2){
+                        return;
+                    }
+                    navigator.clipboard.writeText(number2)
+                    .then(() => {
+                        console.log('Скопирован номер');
+                    });
 
                 };
-                button2.src = 'https://a.unirenter.ru/b24/img/search.png';
+                button2.src = 'https://a.unirenter.ru/b24/img/icons8-copy-24.png';
                 parent2.insertAdjacentElement('afterbegin', button2);
                 // --- notify. Добавленно в версии 3
+                // addNotifyForWhatsappButton(parent2);
+                // Кнопка перехода sip:
+                var button3 = document.createElement('img');
+                button3.id = 'addUnirenter';
+                button3.style = 'height:24px; padding:8px; cursor:pointer;';
+                button3.onclick = function () {
+                    window.location.href = `sip://${number2}`;
+                };
+                button3.src = 'https://a.unirenter.ru/b24/img/call.png';
+                parent2.insertAdjacentElement('afterbegin', button3);
                 addNotifyForWhatsappButton(parent2);
                 // ---
             }
@@ -658,21 +672,41 @@ const whatsapp_helper = function () {
         document.body.appendChild(i);
     }
 
-    on('body', 'click', 'span[data-icon="send"]', function (e) {
-        apiLogActionSendMsg();
+    $('body').on('click', function (e) {
+        if($(e.target).hasClass('epia9gcq')){
+            apiLogActionSendMsg();
+        }
     });
 
-    on('body', 'keyup', 'div[contenteditable="true"]', function (e) {
-        if (e.key === 'Enter') apiLogActionSendMsg();
+    $('body').on('keyup', 'div[contenteditable="true"]', function (e) {
+        if (e.key == 'Enter'){
+            apiLogActionSendMsg();
+        }
     });
 
     // Отпаравка факта отправки сообщения на api/userAction.php
-    function apiLogActionSendMsg()
-    {
+    function apiLogActionSendMsg() {
         var parent2 = document.querySelectorAll('#main header > div');
-        if (!parent2 || !parent2[2]) return;
+        if (!parent2 || !parent2[2]){
+            return;
+        }
         var title2 = parent2[1].querySelector('span[dir="auto"]');
-        getReq('https://a.unirenter.ru/b24/api/userAction.php?source=whats&action=sendMsg&contact=' + encodeURIComponent(title2.innerText) + queryArgsString);
+        let url = 'https://a.unirenter.ru/b24/api/userAction.php?source=whats&action=sendMsg&contact=' + encodeURIComponent(title2.innerText) + queryArgsString;
+        let text = document.querySelector('._1UWac._1LbR4 ._13NKt').textContent;
+        if(!text){
+            text = $('._3K4-L > div:last-child span[dir="ltr"]').text();
+        }
+        try {
+            fetch(url, {
+                method: 'post',
+                body: JSON.stringify({
+                    message: text
+                })
+            });
+        } catch (e) {
+            showCorsError();
+            return;
+        }
     }
 
     /**
@@ -840,7 +874,7 @@ const whatsapp_helper = function () {
                 //Если изображений меньше 4, то просто получаем и отправляем.
                 //Если больше (есть кнопка "Ещё"), то открываем их, пролистываем и тогда отправляем
                 var lasImgParent = null;
-                if(messageContainer.querySelector('.VWPRY') === null){
+                if (messageContainer.querySelector('.VWPRY') === null) {
                     messageContainer.querySelectorAll('img').forEach(function (img) {
                         if (!img.classList.contains('emoji') && img.src.indexOf('blob') == 0) {
                             if (!lasImgParent || (lasImgParent !== img.parentNode.parentNode)) {
@@ -849,9 +883,9 @@ const whatsapp_helper = function () {
                             }
                         }
                     });
-                }else{
+                } else {
                     let imageElements = messageContainer.querySelectorAll('img');
-                    let lastElement = imageElements[imageElements.length-1];
+                    let lastElement = imageElements[imageElements.length - 1];
                     lastElement.click();
 
                     await delay(1000);
@@ -859,7 +893,7 @@ const whatsapp_helper = function () {
                     let imageSlidesBlock = document.querySelector('._1XWMx');
                     let imageSlides = imageSlidesBlock.querySelectorAll('.zm1kZ');
 
-                    for(let slideContent of imageSlides){
+                    for (let slideContent of imageSlides) {
                         slideContent.querySelectorAll('.zm1kZ._1uBVh._8KUDv .GfgP-')[1].click();
                         await delay(1000);
 
@@ -930,17 +964,17 @@ const whatsapp_helper = function () {
         // Селектор индикатора новых оповещений
         const noticeIndicatorSelector = '._1pJ9J'; // contactNodeSelector + ' ' + 'div[role="gridcell"][aria-colindex="1"] > span > div'
         // Селектор внутреннего span индикатора новых оповещений
-        const noticeIndicatorSelectorSpan = '._23LrM'; // noticeIndicatorSelector + ' > ' + 'span[aria-label]'
+        const noticeIndicatorSelectorSpan = '._1pJ9J'; // noticeIndicatorSelector + ' > ' + 'span[aria-label]'
 
         const contactsUnreadCount = {};
 
 
         function updateMsgCount(noticeIndicator) {
             let contactNode = noticeIndicator.closest(contactNodeSelector);
-            DEBUG_MODE && console.log('DEBUG_MODE: contactNode: ' , contactNode);
+            DEBUG_MODE && console.log('DEBUG_MODE: contactNode: ', contactNode);
 
             let contactPhoneOrName = contactNode.querySelector('div[role="gridcell"][aria-colindex="2"] div:first-child').textContent;
-            DEBUG_MODE && console.log('DEBUG_MODE: Номер телефона или имя контакта: ' , contactPhoneOrName);
+            DEBUG_MODE && console.log('DEBUG_MODE: Номер телефона или имя контакта: ', contactPhoneOrName);
 
             let urlContactParams = isValidPhone(contactPhoneOrName)
                 ? ('&phone=' + contactPhoneOrName.replace(/[\D]/gi, ''))
@@ -949,27 +983,38 @@ const whatsapp_helper = function () {
 
             if (!contactsUnreadCount.hasOwnProperty(contactPhoneOrName) ||
                 (contactsUnreadCount.hasOwnProperty(contactPhoneOrName) &&
-                    contactsUnreadCount[contactPhoneOrName] < messagesCount )) {
+                    contactsUnreadCount[contactPhoneOrName] < messagesCount)) {
                 DEBUG_MODE && console.log('messagesCount', messagesCount);
-                let url = 'https://a.unirenter.ru//b24/api/whatsapp.php?do=whatsappIncomeMsg&version='
+                let url = 'https://a.unirenter.ru/b24/api/whatsapp.php?do=whatsappIncomeMsg&version='
                     + queryArgsString
                     + urlContactParams;
-                //fetch(url).then(r => {});
-                getReq(url);
+                
+                let text = contactNode.querySelector('[dir="ltr"]').textContent;
+
+                try {
+                    fetch(url, {
+                        method: 'post',
+                        body: JSON.stringify({message: text})
+                    });
+                } catch (e) {
+                    showCorsError();
+                    return;
+                }
             }
             contactsUnreadCount[contactPhoneOrName] = messagesCount;
         }
 
         var ob = new MutationObserver((mutationsList, observer) => {
             for (let mutation of mutationsList) {
+
                 if (mutation.type !== 'childList' && mutation.type !== 'characterData') {
                     continue;
                 }
 
                 switch (mutation.type) {
                     case 'childList':
-                        let indicator = mutation.target.querySelector(noticeIndicatorSelectorSpan)
-                        DEBUG_MODE && console.log('DEBUG_MODE indicatorNode: ' , indicator);
+                        let indicator = mutation.target.querySelector('.' + noticeIndicatorSelectorSpan)
+                        DEBUG_MODE && console.log('DEBUG_MODE indicatorNode: ', indicator);
                         if (indicator) {
                             DEBUG_MODE && console.log('DEBUG_MODE: Появление индикатора', indicator)
                             updateMsgCount(indicator);
@@ -986,9 +1031,10 @@ const whatsapp_helper = function () {
                         }
                         break;
                     case 'characterData':
-                        if (mutation.target.parentNode.matches(noticeIndicatorSelectorSpan)) {
-                            DEBUG_MODE && console.log('DEBUG_MODE: Изменение количества оповещений', mutation.target.parentNode)
-                            updateMsgCount(mutation.target.parentNode);
+                        let indexOf = mutation.target.parentNode.parentNode.parentNode.innerHTML.indexOf(noticeIndicatorSelectorSpan.replace('.', ''));
+                        if (indexOf != -1) {
+                            DEBUG_MODE && console.log('DEBUG_MODE: Изменение количества оповещений', mutation.target.parentNode.parentNode.parentNode)
+                            updateMsgCount(mutation.target.parentNode.parentNode.parentNode);
                         }
                         break;
                 }
@@ -1031,39 +1077,27 @@ const whatsapp_helper = function () {
     var closeAllBtn = null;
     growls = {};
 
-    //Сделан сброс xhr при повторном вызове
     //Дополнительный аргумент postData - в случае комбинации alt+anykey
-    var xhttp = {};
-    var i = 0;
-    function getAlerts(url, callback, postData = {}) {
+    //Переписал XHR на FETCH, т.к. появилась проблема с обработкой ошибок
+    async function getAlerts(url, callback, postData = {}) {
+        let requestBody = {};
         if(!postData.type){
-            postData.type = 'GET';
+            requestBody.method = 'get';
+        }else{
+            requestBody.method = 'post';
+            requestBody.body = postData.body;
         }
-        if(!postData.body){
-            postData.body = '';
-        }
-        // xhttp.abort();
-        for(let r in xhttp){
-            xhttp[r].abort();
-        }
-        xhttp[i] = new XMLHttpRequest();
-        xhttp[i].onreadystatechange = function () {
-            try {
-                if (this.readyState === 4 && this.status === 200) {
-                        var responseJSON = JSON.parse(this.responseText);
-                    callback(responseJSON.results.notifyWhatsapp.result);
-                }
-            } catch (error) {
-                console.log(error);
-                return;
-            }
-        };
-        xhttp[i].open(postData.type, url, true);
-        xhttp[i].send(postData.body);
-        showCorsError();
-        return;
 
-        i++;
+        try {
+            let response = await fetch(url + queryArgsString, {
+                requestBody
+            });
+            let responseJSON = await response.json();
+            callback(responseJSON.results.notifyWhatsapp.result);
+        } catch (e) {
+            showCorsError();
+            return;
+        }
     }
 
     function showAlerts(url, alertsType, postData = {}) {
@@ -1169,9 +1203,20 @@ const whatsapp_helper = function () {
     }
 
     //Слушаем нажатие клавиш
+    let altPress = false;
+    window.addEventListener('keyup', e => {
+        if (e.code == 'AltLeft' || e.code == 'AltRight') {
+            altPress = false;
+        }
+    });
     window.addEventListener('keydown', e => {
         let key = '';
-        if(e.code == 'AltLeft' || e.code == 'AltRight'){
+        if (e.code == 'AltLeft' || e.code == 'AltRight') {
+            altPress = true;
+            return;
+        }
+
+        if(altPress === false){
             return;
         }
 
@@ -1184,25 +1229,25 @@ const whatsapp_helper = function () {
         key = e.code.replace('Key', '').replace('Digit', '').replace('Numpad', '');
 
         navigator.clipboard.readText()
-        .then(text => {
-            reloadAlerts(
-                notifyUrl + urlContactParamsNew + '&keypress=alt+' + key, 
-                'notify', 
-                {
-                    type: 'POST', 
-                    body: JSON.stringify({
-                        buffer: text
-                    })
-                });
-        })
-        .catch(err => {
-            // возможно, пользователь не дал разрешение на чтение данных из буфера обмена
-            console.log('Something went wrong', err);
-        });
+            .then(text => {
+                reloadAlerts(
+                    notifyUrl + urlContactParamsNew + '&keypress=alt+' + key,
+                    'notify',
+                    {
+                        type: 'POST',
+                        body: JSON.stringify({
+                            buffer: text
+                        })
+                    });
+            })
+            .catch(err => {
+                // возможно, пользователь не дал разрешение на чтение данных из буфера обмена
+                console.log('Something went wrong', err);
+            });
     });
-    
+
     //Окошко ошибки CORS
-    function showCorsError(){
+    function showCorsError() {
         // removeAlerts('notify');
         clearInterval(sendMessageInterval);
         appendAlerts(
@@ -1214,7 +1259,7 @@ const whatsapp_helper = function () {
                     bColor: '#e6005c',
                     tColor: '#ffffff'
                 }
-            }, 
+            },
             'notify'
         );
     }
